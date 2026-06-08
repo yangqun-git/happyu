@@ -35,3 +35,7 @@ gradle runIde -PideaLocalPath="/Applications/IntelliJ IDEA.app/Contents"
 ```
 
 生成的插件包在 `build/distributions/`。
+
+## 开源协议
+
+本项目基于 [MIT License](LICENSE) 开源。
