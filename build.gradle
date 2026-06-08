@@ -1,0 +1,36 @@
+plugins {
+    id 'java'
+    id 'org.jetbrains.intellij' version '1.17.4'
+}
+
+group = 'com.happyu'
+version = '0.1.0'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+intellij {
+    def localIdeaPath = providers.gradleProperty('ideaLocalPath').orNull
+    if (localIdeaPath != null && !localIdeaPath.isBlank()) {
+        localPath = localIdeaPath
+    } else {
+        version = '2024.1.7'
+        type = 'IU'
+    }
+}
+
+patchPluginXml {
+    sinceBuild = '241'
+    untilBuild = '261.*'
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}

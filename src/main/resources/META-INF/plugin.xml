@@ -1,0 +1,32 @@
+<idea-plugin>
+    <id>com.happyu.happyu</id>
+    <name>happyu</name>
+    <vendor>happyu</vendor>
+
+    <description><![CDATA[
+        Opens a low-profile browser in an IntelliJ IDEA editor tab. Images and media are blocked by default,
+        and the page colors follow the current IDE theme.
+    ]]></description>
+
+    <depends>com.intellij.modules.platform</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <fileEditorProvider implementation="com.happyu.HappyuEditorProvider"/>
+    </extensions>
+
+    <actions>
+        <action id="happyu.Open"
+                class="com.happyu.OpenHappyuAction"
+                text="Open happyu"
+                description="Open happyu">
+            <add-to-group group-id="ToolsMenu" anchor="last"/>
+        </action>
+
+        <action id="happyu.ToggleImages"
+                class="com.happyu.ToggleHappyuImagesAction"
+                text="Toggle happyu Images"
+                description="Enable or disable images in happyu">
+            <keyboard-shortcut keymap="$default" first-keystroke="control alt I"/>
+        </action>
+    </actions>
+</idea-plugin>
