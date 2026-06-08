@@ -1,6 +1,7 @@
 # happyu
 
 ![happyu preview](src/main/resources/img/a7e3bab7-08c0-47ab-bfbd-2a78d3baf33b.png)
+![happyu preview](src/main/resources/img/e638acac-0a5e-4f05-af77-1b1aa6707af8.png)
 
 摸鱼插件：在编辑器 tab 中打开一个内嵌浏览器，默认屏蔽图片和媒体资源，只保留文字内容。
 页面颜色会跟随 IDEA 当前主题，适合低调浏览热搜、榜单和资讯文本。
