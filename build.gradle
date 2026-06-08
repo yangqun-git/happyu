@@ -34,3 +34,7 @@ patchPluginXml {
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
 }
+
+tasks.matching { it.name in ['buildSearchableOptions', 'jarSearchableOptions'] }.configureEach {
+    enabled = false
+}

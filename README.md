@@ -11,9 +11,9 @@
 ## 功能
 
 - `Tools -> Open happyu` 打开浏览器 tab。
-- 默认打开的首页为 `https://tophub.today/`。
+- 默认打开的首页为 `https://www.baidu.com/`。
 - 可自由输入网址。
-- 顶部提供地址栏、返回、前进、刷新、图片开关和常用热榜站点。
+- 顶部提供地址栏、返回、前进、刷新和图片开关。
 - 默认屏蔽图片、favicon、视频等媒体资源，并注入 CSS 隐藏图片、背景图、视频、canvas 等元素。
 - 快捷键 `Ctrl+Alt+I` 切换图片屏蔽状态。macOS 上如果和系统快捷键冲突，可在 IDEA 的 Keymap 里调整 `Toggle happyu Images`。
 - 网页背景色、文字色、链接色会按 IDEA 当前明暗主题重新注入。

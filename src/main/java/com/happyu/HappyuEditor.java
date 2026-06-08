@@ -19,8 +19,10 @@ import com.intellij.ui.ColorUtil;
 import com.intellij.util.ui.UIUtil;
 import org.cef.browser.CefBrowser;
 import org.cef.browser.CefFrame;
+import org.cef.handler.CefDisplayHandlerAdapter;
 import org.cef.handler.CefKeyboardHandler;
 import org.cef.handler.CefKeyboardHandlerAdapter;
+import org.cef.handler.CefLifeSpanHandlerAdapter;
 import org.cef.handler.CefLoadHandlerAdapter;
 import org.cef.handler.CefRequestHandlerAdapter;
 import org.cef.handler.CefResourceRequestHandler;
@@ -33,7 +35,6 @@ import org.jetbrains.annotations.Nullable;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
-import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
@@ -44,18 +45,13 @@ import java.awt.FlowLayout;
 import java.awt.event.KeyEvent;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 
 final class HappyuEditor extends UserDataHolderBase implements FileEditor {
-    private static final String HOME_URL = "https://tophub.today/";
-    private static final Preset[] PRESETS = {
-            new Preset("今日热榜", "https://tophub.today/"),
-            new Preset("微博热搜", "https://s.weibo.com/top/summary"),
-            new Preset("知乎热榜", "https://www.zhihu.com/hot"),
-            new Preset("百度热搜", "https://top.baidu.com/board?tab=realtime"),
-            new Preset("少数派", "https://sspai.com/")
-    };
+    private static final String HOME_URL = "https://www.baidu.com/";
 
     private final HappyuVirtualFile file;
     private final PropertyChangeSupport changeSupport = new PropertyChangeSupport(this);
@@ -65,10 +61,12 @@ final class HappyuEditor extends UserDataHolderBase implements FileEditor {
     private final JButton forwardButton = new JButton(">");
     private final JButton reloadButton = new JButton("Reload");
     private final JButton toggleImagesButton = new JButton();
-    private final JComboBox<Preset> presetBox = new JComboBox<>(PRESETS);
     private final LafManagerListener lafListener = manager -> SwingUtilities.invokeLater(this::applyIdeTheme);
+    private final List<String> navigationHistory = new ArrayList<>();
 
     private volatile boolean imagesBlocked = true;
+    private int navigationIndex = -1;
+    private boolean loadingFromHistory = false;
     private JBCefBrowser browser;
     private JBCefClient client;
 
@@ -85,6 +83,7 @@ final class HappyuEditor extends UserDataHolderBase implements FileEditor {
 
         project.getMessageBus().connect(this).subscribe(LafManagerListener.TOPIC, lafListener);
         updateToggleButton();
+        updateNavigationButtons();
         applyIdeTheme();
     }
 
@@ -97,7 +96,6 @@ final class HappyuEditor extends UserDataHolderBase implements FileEditor {
         navigation.add(forwardButton);
         navigation.add(reloadButton);
         navigation.add(toggleImagesButton);
-        navigation.add(presetBox);
 
         backButton.setToolTipText("Back");
         forwardButton.setToolTipText("Forward");
@@ -105,16 +103,8 @@ final class HappyuEditor extends UserDataHolderBase implements FileEditor {
         toggleImagesButton.setToolTipText("Ctrl+Alt+I");
         addressField.setToolTipText("URL");
 
-        backButton.addActionListener(event -> {
-            if (browser != null && browser.getCefBrowser().canGoBack()) {
-                browser.getCefBrowser().goBack();
-            }
-        });
-        forwardButton.addActionListener(event -> {
-            if (browser != null && browser.getCefBrowser().canGoForward()) {
-                browser.getCefBrowser().goForward();
-            }
-        });
+        backButton.addActionListener(event -> goBack());
+        forwardButton.addActionListener(event -> goForward());
         reloadButton.addActionListener(event -> {
             if (browser != null) {
                 browser.getCefBrowser().reload();
@@ -122,12 +112,6 @@ final class HappyuEditor extends UserDataHolderBase implements FileEditor {
         });
         toggleImagesButton.addActionListener(event -> toggleImages());
         addressField.addActionListener(event -> load(addressField.getText()));
-        presetBox.addActionListener(event -> {
-            Object selected = presetBox.getSelectedItem();
-            if (selected instanceof Preset preset) {
-                load(preset.url());
-            }
-        });
 
         toolbar.add(navigation, BorderLayout.WEST);
         toolbar.add(addressField, BorderLayout.CENTER);
@@ -145,6 +129,12 @@ final class HappyuEditor extends UserDataHolderBase implements FileEditor {
 
         client.addRequestHandler(new CefRequestHandlerAdapter() {
             @Override
+            public boolean onOpenURLFromTab(CefBrowser cefBrowser, CefFrame frame, String targetUrl, boolean userGesture) {
+                openInCurrentTab(targetUrl);
+                return true;
+            }
+
+            @Override
             public CefResourceRequestHandler getResourceRequestHandler(CefBrowser cefBrowser,
                                                                        CefFrame frame,
                                                                        CefRequest request,
@@ -158,6 +148,14 @@ final class HappyuEditor extends UserDataHolderBase implements FileEditor {
                         return imagesBlocked && isBlockedResource(request);
                     }
                 };
+            }
+        }, browser.getCefBrowser());
+
+        client.addLifeSpanHandler(new CefLifeSpanHandlerAdapter() {
+            @Override
+            public boolean onBeforePopup(CefBrowser cefBrowser, CefFrame frame, String targetUrl, String targetFrameName) {
+                openInCurrentTab(targetUrl);
+                return true;
             }
         }, browser.getCefBrowser());
 
@@ -181,9 +179,23 @@ final class HappyuEditor extends UserDataHolderBase implements FileEditor {
                 if (frame != null) {
                     SwingUtilities.invokeLater(() -> {
                         if (frame.isMain()) {
-                            addressField.setText(Objects.toString(cefBrowser.getURL(), ""));
+                            String url = Objects.toString(cefBrowser.getURL(), "");
+                            addressField.setText(url);
+                            recordNavigation(url);
                         }
                         scheduleContentMode(frame);
+                    });
+                }
+            }
+        }, browser.getCefBrowser());
+
+        client.addDisplayHandler(new CefDisplayHandlerAdapter() {
+            @Override
+            public void onAddressChange(CefBrowser cefBrowser, CefFrame frame, String url) {
+                if (frame != null && frame.isMain()) {
+                    SwingUtilities.invokeLater(() -> {
+                        addressField.setText(Objects.toString(url, ""));
+                        recordAddressChange(url);
                     });
                 }
             }
@@ -224,9 +236,107 @@ final class HappyuEditor extends UserDataHolderBase implements FileEditor {
         }
 
         String url = normalizeUrl(rawUrl);
+        loadUrl(url, false);
+    }
+
+    private void loadUrl(String url, boolean fromHistory) {
+        if (browser == null) {
+            return;
+        }
+
+        loadingFromHistory = fromHistory;
         addressField.setText(url);
         updateBrowserPageBackground();
         browser.loadURL(url);
+        updateNavigationButtons();
+    }
+
+    private void openInCurrentTab(String rawUrl) {
+        String url = normalizeLoadedUrl(rawUrl);
+        if (url == null) {
+            return;
+        }
+
+        SwingUtilities.invokeLater(() -> loadUrl(url, false));
+    }
+
+    private void goBack() {
+        if (navigationIndex <= 0) {
+            return;
+        }
+
+        navigationIndex--;
+        loadUrl(navigationHistory.get(navigationIndex), true);
+    }
+
+    private void goForward() {
+        if (navigationIndex >= navigationHistory.size() - 1) {
+            return;
+        }
+
+        navigationIndex++;
+        loadUrl(navigationHistory.get(navigationIndex), true);
+    }
+
+    private void recordNavigation(String rawUrl) {
+        String url = normalizeLoadedUrl(rawUrl);
+        if (url == null) {
+            updateNavigationButtons();
+            return;
+        }
+
+        if (loadingFromHistory) {
+            loadingFromHistory = false;
+            if (navigationIndex >= 0 && navigationIndex < navigationHistory.size()) {
+                navigationHistory.set(navigationIndex, url);
+            }
+            updateNavigationButtons();
+            return;
+        }
+
+        if (navigationIndex >= 0 && url.equals(navigationHistory.get(navigationIndex))) {
+            updateNavigationButtons();
+            return;
+        }
+
+        if (navigationIndex < navigationHistory.size() - 1) {
+            navigationHistory.subList(navigationIndex + 1, navigationHistory.size()).clear();
+        }
+        navigationHistory.add(url);
+        navigationIndex = navigationHistory.size() - 1;
+        updateNavigationButtons();
+    }
+
+    private void recordAddressChange(String rawUrl) {
+        String url = normalizeLoadedUrl(rawUrl);
+        if (url == null) {
+            updateNavigationButtons();
+            return;
+        }
+
+        if (loadingFromHistory) {
+            updateNavigationButtons();
+            return;
+        }
+
+        recordNavigation(url);
+    }
+
+    private static String normalizeLoadedUrl(String rawUrl) {
+        if (rawUrl == null) {
+            return null;
+        }
+
+        String value = rawUrl.trim();
+        if (value.isEmpty() || value.equals("about:blank") || value.startsWith("data:")) {
+            return null;
+        }
+        return value;
+    }
+
+    private void updateNavigationButtons() {
+        backButton.setEnabled(navigationIndex > 0);
+        forwardButton.setEnabled(navigationIndex >= 0 && navigationIndex < navigationHistory.size() - 1);
     }
 
     private static String normalizeUrl(String rawUrl) {
@@ -574,12 +684,5 @@ final class HappyuEditor extends UserDataHolderBase implements FileEditor {
             client = null;
         }
         file.invalidate();
-    }
-
-    private record Preset(String name, String url) {
-        @Override
-        public String toString() {
-            return name;
-        }
     }
 }
