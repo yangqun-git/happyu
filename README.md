@@ -3,10 +3,11 @@
 ![happyu preview](src/main/resources/img/a7e3bab7-08c0-47ab-bfbd-2a78d3baf33b.png)
 ![happyu preview](src/main/resources/img/e638acac-0a5e-4f05-af77-1b1aa6707af8.png)
 
-摸鱼插件：在编辑器 tab 中打开一个内嵌浏览器，默认屏蔽图片和媒体资源，只保留文字内容。
-页面颜色会跟随 IDEA 当前主题，适合低调浏览热搜、榜单和资讯文本。
+happyu 是一个给 IntelliJ IDEA 用的低调摸鱼浏览器插件。
 
+它会在 IDEA 编辑器 tab 中打开网页，而不是跳到系统浏览器。插件默认屏蔽图片、视频、favicon 等媒体资源，并把网页尽量处理成文字优先的阅读模式。页面颜色会跟随 IDEA 当前主题，适合在休息间隙低调浏览搜索结果、热搜、榜单、文档和其他文字内容。
 
+简单说：想看点网页，但又不想离开 IDEA，也不想让页面花花绿绿太显眼，就用它。
 
 ## 功能
 

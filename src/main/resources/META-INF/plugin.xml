@@ -4,8 +4,25 @@
     <vendor>happyu</vendor>
 
     <description><![CDATA[
-        Opens a low-profile browser in an IntelliJ IDEA editor tab. Images and media are blocked by default,
-        and the page colors follow the current IDE theme.
+        <p>
+            <b>happyu</b> is a low-profile browser plugin for IntelliJ IDEA, designed for quick browsing inside the IDE.
+        </p>
+        <p>
+            happyu 是一个运行在 IntelliJ IDEA 编辑器标签页中的低调摸鱼浏览器插件。它可以直接在 IDEA 内打开网页，不会跳转到系统默认浏览器。插件默认屏蔽图片、视频、favicon
+            等媒体资源，并尽量将网页处理成文字优先的阅读模式。页面颜色会跟随 IDEA 当前主题，
+            在深色或浅色界面中都尽量保持自然低调。
+        </p>
+        <ul>
+            <li>在 IDEA 编辑器标签页中浏览网页。</li>
+            <li>默认屏蔽图片和媒体资源，保留更干净的文字内容。</li>
+            <li>网页背景色和文字色会跟随 IDEA 当前主题。</li>
+            <li>点击网页链接时继续留在插件标签页内，不会打开系统浏览器。</li>
+            <li>需要查看图片时，可以使用 <code>Ctrl+Alt+I</code> 快速切换图片显示状态。</li>
+        </ul>
+        <p>
+            适合在休息间隙低调浏览搜索结果、热搜、榜单、文档和其他文字内容。
+            简单说：想看点网页，但又不想离开 IDEA，也不想让页面太显眼，就可以用它。
+        </p>
     ]]></description>
 
     <depends>com.intellij.modules.platform</depends>
