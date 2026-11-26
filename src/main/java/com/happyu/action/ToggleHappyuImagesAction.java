@@ -1,13 +1,15 @@
-package com.happyu;
+package com.happyu.action;
 
-import com.intellij.openapi.actionSystem.AnAction;
+import com.happyu.browser.HappyuBrowserPanel;
+import com.happyu.toolwindow.HappyuToolWindowFactory;
+
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.ActionUpdateThread;
-import com.intellij.openapi.fileEditor.FileEditorManager;
+import com.intellij.openapi.project.DumbAwareAction;
 import com.intellij.openapi.project.Project;
 import org.jetbrains.annotations.NotNull;
 
-public final class OpenHappyuAction extends AnAction {
+public final class ToggleHappyuImagesAction extends DumbAwareAction {
     @Override
     public void actionPerformed(@NotNull AnActionEvent event) {
         Project project = event.getProject();
@@ -15,7 +17,7 @@ public final class OpenHappyuAction extends AnAction {
             return;
         }
 
-        FileEditorManager.getInstance(project).openFile(HappyuFiles.getOrCreate(project), true);
+        HappyuToolWindowFactory.show(project, HappyuBrowserPanel::toggleImages);
     }
 
     @Override

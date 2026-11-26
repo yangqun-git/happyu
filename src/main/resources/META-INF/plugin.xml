@@ -8,14 +8,16 @@
             <b>happyu</b> is a low-profile browser plugin for IntelliJ IDEA, designed for quick browsing inside the IDE.
         </p>
         <p>
-            happyu 是一个运行在 IntelliJ IDEA 编辑器标签页中的低调摸鱼浏览器插件。它可以直接在 IDEA 内打开网页，不会跳转到系统默认浏览器。插件默认屏蔽图片、视频、favicon
+            happyu 是一个运行在 IntelliJ IDEA 侧边工具窗口中的低调摸鱼浏览器插件。它可以直接在 IDEA 内打开多个网页标签，不会跳转到系统默认浏览器。插件默认屏蔽图片、视频、favicon
             等媒体资源，并尽量将网页处理成文字优先的阅读模式。页面颜色会跟随 IDEA 当前主题，
             在深色或浅色界面中都尽量保持自然低调。
         </p>
         <ul>
-            <li>在 IDEA 编辑器标签页中浏览网页。</li>
+            <li>在 IDEA 侧边工具窗口中浏览网页，支持新建、切换和关闭多个标签。</li>
             <li>默认屏蔽图片和媒体资源，保留更干净的文字内容。</li>
             <li>网页背景色和文字色会跟随 IDEA 当前主题。</li>
+            <li>可选 Agent 对话风格阅读模式，在本地提取正文，保留标题、段落、列表、代码和链接。</li>
+            <li>可独立开关底部 Agent 风格输入面板，仅用于本地展示，不连接模型。</li>
             <li>点击网页链接时继续留在插件标签页内，不会打开系统浏览器。</li>
             <li>需要查看图片时，可以使用 <code>Ctrl+Alt+I</code> 快速切换图片显示状态。</li>
         </ul>
@@ -26,21 +28,38 @@
     ]]></description>
 
     <depends>com.intellij.modules.platform</depends>
+    <!-- JCEF is a bundled plugin in 262+; older supported IDEs provide it in the platform. -->
+    <depends optional="true" config-file="happyu-jcef.xml">com.intellij.modules.jcef</depends>
 
     <extensions defaultExtensionNs="com.intellij">
-        <fileEditorProvider implementation="com.happyu.HappyuEditorProvider"/>
+        <toolWindow id="happyu"
+                    anchor="right"
+                    icon="/icons/happyu.svg"
+                    canCloseContents="true"
+                    factoryClass="com.happyu.toolwindow.HappyuToolWindowFactory"/>
+        <projectConfigurable parentId="tools"
+                             instance="com.happyu.settings.HappyuConfigurable"
+                             id="com.happyu.settings"
+                             displayName="happyu"
+                             nonDefaultProject="true"/>
     </extensions>
 
     <actions>
+        <action id="happyu.SleepTab"
+                class="com.happyu.action.SleepHappyuTabAction"
+                text="Sleep Tab"
+                description="Unload this background tab. Reopening it reloads the page and clears its history.">
+            <add-to-group group-id="ToolWindowContextMenu" anchor="first"/>
+        </action>
         <action id="happyu.Open"
-                class="com.happyu.OpenHappyuAction"
+                class="com.happyu.action.OpenHappyuAction"
                 text="Open happyu"
                 description="Open happyu">
             <add-to-group group-id="ToolsMenu" anchor="last"/>
         </action>
 
         <action id="happyu.ToggleImages"
-                class="com.happyu.ToggleHappyuImagesAction"
+                class="com.happyu.action.ToggleHappyuImagesAction"
                 text="Toggle happyu Images"
                 description="Enable or disable images in happyu">
             <keyboard-shortcut keymap="$default" first-keystroke="control alt I"/>
